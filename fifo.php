@@ -1,31 +1,26 @@
 <?php
 
-function updateProcess(array $arrProcess, $timeMore, $current)
+function testeArray($arr)
 {
-    foreach ($arrProcess as $pos => $process) {
-        if ($process['lastTime']) {
-            continue;
-        }
-
-        if ($current >= $process['timeInit']) {
-            $timeMore = $timeMore - $process['timeInit'];
-            $arrProcess[$pos]['time'] += $timeMore;
+    $count = 0;
+    foreach ($arr as $r) {
+        if (!$r['lastTime']) {
+            $count++;
         }
     }
 
-    return $arrProcess;
+    return $count;
 }
 
 function printProcess(array $arrProces)
 {
-    echo "Processo\t Time In\t CPU\t Waiting Time".PHP_EOL;
+    echo "Processo\t T.E.\t CPU\t T.W.\t T.F." . PHP_EOL;
     foreach ($arrProces as $pos => $proc) {
-        echo "$pos\t\t {$proc['timeInit']}\t\t {$proc['cpu']}\t\t {$proc['lastTime']}" . PHP_EOL;
+        echo "{$proc['number']}\t\t {$proc['timeInit']}\t {$proc['cpu']}\t {$proc['lastTime']}\t {$proc['time']}" . PHP_EOL;
     }
 }
 
 echo "----------- Sistema de escalonamento FIFO -----------" . PHP_EOL;
-$more    = 'S';
 $process = array();
 
 echo "Deseja inserir os valores ou o sistema prefere que o sistema gere aleatoriamente?" . PHP_EOL;
@@ -41,28 +36,33 @@ if ($option == 1) {
         $cpu    = rand(0, 60);
 
         $process[] = [
+            'number' => count($process) + 1,
             'timeInit' => $timeIn,
-            'cpu'      => $timeIn,
+            'cpu'      => $cpu,
             'time'     => 0,
             'lastTime' => ''
         ];
 
         $count--;
     }
-} elseif($option == 2) {
+} elseif ($option == 2) {
     while ($count > 0) {
         $timeIn = readline("Informe o tempo de entrada: ");
         $cpu    = readline("Informe o tempo de CPU necessário: ");
 
         $process[] = [
+            'number'   => count($process) + 1,
             'timeInit' => $timeIn,
-            'cpu'      => $timeIn,
+            'cpu'      => $cpu,
             'time'     => 0,
             'lastTime' => ''
         ];
         $count--;
     }
 }
+
+echo "----------- ANTES DE PROCESSAR-----------" . PHP_EOL;
+printProcess($process);
 
 // ordena em ordem de tempo de chegada
 usort(
@@ -77,13 +77,20 @@ usort(
 );
 
 $arrProcessFinal = $process;
-echo "----------- ANTES DE PROCESSAR-----------" . PHP_EOL;
-printProcess($arrProcessFinal);
-$i = 0;
 foreach ($process as $p => $proc) {
-    $arrProcessFinal                 = updateProcess($arrProcessFinal, $proc['cpu'], $i);
-    $arrProcessFinal[$p]['lastTime'] = $arrProcessFinal[$p]['time'];
-    $i++;
+    if ($proc['number'] == 1) {
+        $arrProcessFinal[$p]['lastTime'] = 0;
+        $arrProcessFinal[$p]['time'] = $arrProcessFinal[$p]['timeInit'] + $proc['cpu'];
+    } else {
+        $timeAnt = $arrProcessFinal[$p - 1]['time'];
+
+        $arrProcessFinal[$p]['lastTime'] = $timeAnt - $arrProcessFinal[$p]['timeInit'];
+        if ($arrProcessFinal[$p]['lastTime'] < 0) {
+            $arrProcessFinal[$p]['lastTime'] = 0;
+        }
+        $arrProcessFinal[$p]['time']    = $timeAnt + $proc['cpu'];
+    }
+
 }
 
 echo "----------- DEPOIS DE PROCESSAR-----------" . PHP_EOL;
