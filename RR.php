@@ -1,4 +1,6 @@
 <?php
+
+error_reporting(E_ERROR);
 /**
  * Esta função é responsável por verificar se existe
  * algum processo com tempo de execução diferente que o tempo de CPU
@@ -8,7 +10,7 @@
 function testExec($proccess)
 {
     // verifica se é um array de array de processos
-    if (count($proccess) == count($proccess, COUNT_RECURSIVE)) {
+    if (count($proccess) != count($proccess, COUNT_RECURSIVE)) {
         foreach ($proccess as $r) {
             if ($r['timeExec'] != $r['cpu']) {
                 return true;
@@ -28,7 +30,6 @@ function updateProccess($process, $procAtual, $quantum)
         if ($procAtual == $pos) {
             continue;
         }
-        echo "tste :".testExec($process)."".PHP_EOL;
         if (testExec($process) && ($process['timeInit'] <= $process[$procAtual]['time'])) {
             $arrUpdated[$pos]['time'] += $quantum;
             $arrUpdated[$pos]['lastTime'] += $quantum;
@@ -109,7 +110,7 @@ while (testExec($process)) {
 
     while (list($p, $proc) = each($process)) {
         $countQuantum = 0;
-        while (testExec($proc) && $countQuantum < $quantum) {
+        while (testExec($process[$p]) && $countQuantum < $quantum) {
             $process[$p]['time']++;
             $process[$p]['timeExec']++;
             $countQuantum++;
